@@ -1,0 +1,4 @@
+interface:
+  display_name: "ゆもつよメソッド テスト開発"
+  short_description: "仕様理解からテストプロシジャーまで一貫して設計します"
+  default_prompt: "Use $yumotsuyo-test-development to analyze this test basis and design traceable test procedures."
