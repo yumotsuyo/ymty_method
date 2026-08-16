@@ -49,7 +49,7 @@ flowchart LR
     memory -->|"電源OFF時の反映元"| pskey
     init -->|"HF=9、AV=7へ復帰"| hf
     init -->|"HF=9、AV=7へ復帰"| av
-    reset -->|"HF=9、AV=7へ復帰（要確認）"| pskey
+    reset -->|"HF=9、AV=7へ復帰（ユーザー確認済み）"| pskey
     user -->|"VOLを押しながら電源ON"| multipoint
 
     classDef target fill:#4fa72d,color:#fff,stroke:#28701a,stroke-width:2px;
