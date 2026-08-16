@@ -2,45 +2,61 @@
 
 機能一覧を作る前に使用する。図の見た目ではなく、対象機能の境界、処理契機、値・状態の流れを再現する。
 
-## Mermaidテンプレート
+## Mermaid例：Bluetoothヘッドセットのボリュームコントロール
+
+仕様書の複数箇所に分散した、入力判断、状態別の対象選択、音量変換、上下限通知、一時保持、永続化、初期化との関係を再構成した例を示す。
 
 ```mermaid
 flowchart LR
-    registration["新規会員登録"]
-    rank["ランク更新"]
+    user["利用者"]
+    hfContext["着信音あり／通話中"]
+    avContext["ストリーミング中"]
+    invalidContext["非該当状態（例: 通話待受）"]
+    power["電源OFF遷移"]
+    reset["ソフトウェアリセット"]
+    init["初期化"]
+    multipoint["電源ON時の接続モード設定"]
 
-    subgraph cartScreen["カート画面"]
-        checkout["チェックアウト"]
+    subgraph device["Bluetoothヘッドセット"]
+        input["VOL操作受付・押下判定"]
+        route["動作状態による対象系統選択"]
+        change["音量step変換・範囲維持"]
+        hf["HF音量 0..15（既定9）"]
+        av["AV音量 0..20（既定7）"]
+        memory["変更音量のメモリ保持"]
+        pskey["HF／AV音量PSKEY"]
+        beepJudge["上下限ビープ判定"]
+        beep["ビープ出力（音量12）"]
+        ignore["操作無視"]
     end
 
-    subgraph registerScreen["レジ（お支払い、配送）画面"]
-        coupon["クーポン利用"]
-        pointUse["ポイント利用"]
-        order["注文確定"]
-    end
-
-    subgraph historyScreen["注文履歴画面"]
-        cancel["注文キャンセル"]
-    end
-
-    pointGrant["ポイント付与"]
-    pointBalance["ポイント残高表示"]
-
-    checkout --> registerScreen
-    registration -->|"新規付与"| pointGrant
-    pointUse -->|"ポイント割引額決定"| order
-    order -->|"付与ポイント数－利用ポイント数"| pointGrant
-    cancel -->|"利用ポイント返却"| pointGrant
-    pointGrant -->|"ポイント数更新"| pointBalance
-    pointGrant -->|"残高増減値"| rank
+    user -->|"VOL+／VOL- 短押し・長押し"| input
+    input -->|"短押し1step、800msで1step、以後300msごと"| route
+    input -->|"312.5ms以内の後続操作"| ignore
+    input -->|"過負荷時はキーコードを2000ms保持"| route
+    hfContext -->|"HF操作を有効化"| route
+    avContext -->|"AV操作を有効化"| route
+    invalidContext -->|"非該当状態"| ignore
+    route -->|"HF系を選択"| change
+    route -->|"AV系を選択"| change
+    change -->|"0..15内の変更"| hf
+    change -->|"0..20内の変更"| av
+    hf -->|"変更値、AVは不変"| memory
+    av -->|"変更値、HFは不変"| memory
+    change -->|"上下限到達／上下限外向き操作"| beepJudge
+    beepJudge -->|"短押し、または長押し認識時1回"| beep
+    power -->|"メモリ値を反映"| pskey
+    memory -->|"電源OFF時の反映元"| pskey
+    init -->|"HF=9、AV=7へ復帰"| hf
+    init -->|"HF=9、AV=7へ復帰"| av
+    reset -->|"HF=9、AV=7へ復帰（要確認）"| pskey
+    user -->|"VOLを押しながら電源ON"| multipoint
 
     classDef target fill:#4fa72d,color:#fff,stroke:#28701a,stroke-width:2px;
     classDef related fill:#fff,color:#111,stroke:#28789a;
-    class pointUse,pointGrant,pointBalance target;
-    class registration,rank,checkout,coupon,order,cancel related;
-    style cartScreen fill:#9fb2c2,stroke:#28789a,stroke-width:2px
-    style registerScreen fill:#9fb2c2,stroke:#28789a,stroke-width:2px
-    style historyScreen fill:#9fb2c2,stroke:#28789a,stroke-width:2px
+    class input,route,change,hf,av,memory,pskey,beepJudge,beep,ignore target;
+    class user,hfContext,avContext,invalidContext,power,reset,init,multipoint related;
+    style device fill:#9fb2c2,stroke:#28789a,stroke-width:2px
 ```
 
 ## 作成規則
