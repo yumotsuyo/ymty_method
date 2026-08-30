@@ -18,7 +18,7 @@
 詳細理解モデル
 ```
 
-特定テーマの依頼は、下流の設計対象を指定する。上流の全体理解範囲を同じテーマへ狭めない。例えば「ポイント機能をテストする」という依頼でも、ポイント章だけを読んで機能候補を作らず、会員登録、注文・決済、クーポン、注文キャンセルなどを含むテストベース全体の断片と関係からポイント領域を選ぶ。
+特定テーマの依頼は、下流の設計対象を指定する。上流の全体理解範囲を同じテーマへ狭めない。例えば「ボリュームコントロールをテストする」という依頼でも、音量変更の章だけを読んで機能候補を作らず、電源状態、動作モード、操作入力、表示、音声出力、設定値の永続化を含むテストベース全体の断片と関係から対象領域を選ぶ。
 
 ## 全体機能候補ランドスケープ
 
@@ -32,41 +32,37 @@
 
 外部から見た業務上の能力、関連機能、主要な契機、値・状態・結果の流れを表す。緑ノードは承認後の機能一覧と原則1対1にする。
 
-### Mermaid例：ポイント機能
+### Mermaid例：ボリュームコントロール
 
 ```mermaid
 flowchart LR
-    member["会員"]
-    signup["会員登録"]
-    purchase["商品購入"]
-    cancel["購入キャンセル"]
-    checkout["購入手続き"]
-    order["注文・購入履歴"]
+    user["利用者"]
+    volSwitch["VOLスイッチ"]
+    operationState["動作状態管理"]
+    audioOutput["音声出力"]
+    volumeDisplay["音量表示"]
+    powerControl["電源制御"]
 
-    subgraph pointArea["ポイント機能"]
-        use["ポイント利用"]
-        grant["ポイント付与・更新"]
-        balance["ポイント残高表示"]
+    subgraph volumeArea["音量制御領域"]
+        volumeControl["ボリュームコントロール"]
     end
 
-    member -->|"利用ポイントを指定"| use
-    checkout -->|"購入金額・利用要求"| use
-    use -->|"利用後残高"| grant
-    signup -->|"登録特典の付与契機"| grant
-    purchase -->|"購入特典の付与契機"| grant
-    cancel -->|"取消時の更新契機"| grant
-    grant -->|"現在ポイント"| balance
-    balance -->|"残高を表示"| member
-    grant -->|"ポイント更新結果"| order
+    user -->|"VOL UP／DOWN操作"| volSwitch
+    volSwitch -->|"認識した操作"| volumeControl
+    operationState -->|"HF／AVなどの対象系統"| volumeControl
+    volumeControl -->|"変更後の音量値"| audioOutput
+    volumeControl -->|"現在音量・上下限状態"| volumeDisplay
+    volumeDisplay -->|"音量状態を通知"| user
+    powerControl -->|"電源OFF・復帰の契機"| volumeControl
 
     classDef target fill:#4fa72d,color:#fff,stroke:#28701a,stroke-width:2px;
     classDef related fill:#fff,color:#111,stroke:#28789a;
-    class use,grant,balance target;
-    class member,signup,purchase,cancel,checkout,order related;
-    style pointArea fill:#9fb2c2,stroke:#28789a,stroke-width:2px
+    class volumeControl target;
+    class user,volSwitch,operationState,audioOutput,volumeDisplay,powerControl related;
+    style volumeArea fill:#9fb2c2,stroke:#28789a,stroke-width:2px
 ```
 
-この図では、利用可能ポイントの上限計算、購入額からの減算、残高保存、警告表示などを独立した緑ノードにしない。それらはポイント利用またはポイント付与・更新の内部責務であり、詳細理解モデルと論理的機能構造で展開する。
+この図では、VOL操作受付、対象系統選択、音量step変換、上下限維持、設定値の一時保持・永続化、上下限ビープ判定を独立した緑ノードにしない。それらはボリュームコントロールを実現する内部責務であり、詳細理解モデルと論理的機能構造で展開する。
 
 ### 作成規則
 
